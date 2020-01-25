@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Admin, Resource } from "react-admin";
+import { Admin, Resource, ShowGuesser } from "react-admin";
 import { createBrowserHistory as createHistory } from "history";
 
 import Dashboard from "./components/shared/Dashboard/Dashboard";
@@ -24,11 +24,15 @@ import {
 } from "./components/pages/Projects";
 // Entities -> Users
 import { UserList } from "./components/pages/Users";
+// Entities -> Runs
+import RunList from "./components/pages/runs/List";
+import RunShow from "./components/pages/runs/Show";
 
 // Utils
 import dataProvider from "./context/dataProvider";
 import ProjectContext from "./context";
 import { activeProjectReducer } from "./context/entities/projectContext";
+import { activeExperimentReducer } from "./context/entities/experimentContext";
 
 const history = createHistory();
 
@@ -41,7 +45,10 @@ class App extends Component {
           layout={LayoutComponent}
           dashboard={Dashboard}
           dataProvider={dataProvider}
-          customReducers={{ activeProject: activeProjectReducer }}
+          customReducers={{
+            activeProject: activeProjectReducer,
+            activeExperiment: activeExperimentReducer
+          }}
         >
           <Resource
             name="projects"
@@ -58,6 +65,7 @@ class App extends Component {
             create={ExperimentCreate}
             icon={ExperimentIcon}
           />
+          <Resource name="runs" list={RunList} show={RunShow} icon={ExperimentIcon} />
           <Resource name="users" list={UserList} icon={UserIcon} />
         </Admin>
       </ProjectContext.Provider>

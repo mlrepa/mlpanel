@@ -2,15 +2,36 @@ import React from "react";
 import { DateField } from "react-admin";
 
 const FormattedDateField = props => {
-  const newProps = {
-    ...props,
-    record: {
-      ...props.record,
-      [props.source]: new Date(Number(props.record[props.source]))
-    }
-  };
+  const { innerProp: innerPropValue = "" } = props;
+  let newProps = {};
 
-  return <DateField {...newProps} />;
+  if (innerPropValue) {
+    newProps = {
+      ...props,
+      source: `${innerPropValue}.${props.source}`,
+      record: {
+        ...props.record,
+        [innerPropValue]: {
+          ...props.record[innerPropValue],
+          [props.source]: new Date(
+            Number(props.record[innerPropValue][props.source])
+          )
+        }
+      }
+    };
+  } else {
+    newProps = {
+      ...props,
+      record: {
+        ...props.record,
+        [props.source]: new Date(Number(props.record[props.source]))
+      }
+    };
+  }
+
+  const { innerProp, ...restProps } = newProps;
+
+  return <DateField {...restProps} />;
 };
 
 FormattedDateField.defaultProps = {

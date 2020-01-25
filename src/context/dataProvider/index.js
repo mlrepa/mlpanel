@@ -14,7 +14,8 @@ export default {
       _order: order,
       _start: (page - 1) * perPage,
       _end: page * perPage - 1,
-      project_id: params.filter.project_id
+      project_id: params.filter.project_id,
+      experiment_id: params.filter.experiment_id
     };
     const url = `${apiUrl}/${resource}?${stringify(query)}`;
 
@@ -38,9 +39,8 @@ export default {
   },
 
   getOne: (resource, params) => {
-    const query = {
-      project_id: JSON.parse(localStorage.getItem("current_project"))
-    };
+    const query = JSON.parse(localStorage.getItem("current_entities"));
+
     const url = `${apiUrl}/${resource}/${params.id}?${stringify(query)}`;
 
     return httpClient(url).then(({ json }) => ({
@@ -98,9 +98,7 @@ export default {
   },
 
   create: (resource, params) => {
-    const query = {
-      project_id: JSON.parse(localStorage.getItem("current_project"))
-    };
+    const query = JSON.parse(localStorage.getItem("current_entities"));
 
     return httpClient(`${apiUrl}/${resource}?${stringify(query)}`, {
       method: "POST",
@@ -114,9 +112,7 @@ export default {
   },
 
   delete: (resource, params) => {
-    const query = {
-      project_id: JSON.parse(localStorage.getItem("current_project"))
-    };
+    const query = JSON.parse(localStorage.getItem("current_entities"));
 
     return httpClient(
       `${apiUrl}/${resource}/${params.id}?${stringify(query)}`,
