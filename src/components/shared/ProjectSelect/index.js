@@ -36,6 +36,10 @@ class ProjectSelect extends Component {
 
     const { current_project } = parse(search);
 
+    localStorage.setItem(
+      "current_project",
+      JSON.stringify(current_project || 1)
+    );
     history.push(`${pathname}?current_project=${current_project || 1}`);
 
     getProjectList();
@@ -53,6 +57,7 @@ class ProjectSelect extends Component {
 
     const activeProjectId = event.target.value;
 
+    localStorage.setItem("current_project", JSON.stringify(activeProjectId));
     history.push(`${pathname}?current_project=${activeProjectId}`);
     setActiveProject(activeProjectId);
   };
