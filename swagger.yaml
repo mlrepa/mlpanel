@@ -70,6 +70,35 @@ paths:
       tags:
         - projects
       summary: List projects
+      parameters:
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
       responses:
         200:
           description: Return projects list (dictionary)
@@ -326,6 +355,34 @@ paths:
           required: true
           schema:
             type: string
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
       responses:
         200:
           description: OK
@@ -464,6 +521,34 @@ paths:
           required: true
           schema:
             type: string
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
       responses:
         200:
           description: OK
@@ -556,6 +641,34 @@ paths:
           in: query
           description: Project ID
           required: true
+          schema:
+            type: integer
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
           schema:
             type: integer
       responses:
@@ -692,6 +805,34 @@ paths:
           required: false
           schema:
             type: string
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+              type: integer
       responses:
         200:
           description: OK
@@ -747,6 +888,35 @@ paths:
       tags:
         - deployments
       summary: List deployments
+      parameters:
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
       responses:
         200:
           description: OK
@@ -986,6 +1156,34 @@ paths:
           required: true
           schema:
             type: string
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
       responses:
         200:
           description: OK
