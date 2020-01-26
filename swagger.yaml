@@ -1299,6 +1299,8 @@ components:
     Run:
       type: object
       properties:
+        id:
+          description: Run id
         info:
           $ref: '#/components/schemas/RunInfo'
         data:
