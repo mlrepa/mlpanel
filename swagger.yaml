@@ -1408,6 +1408,8 @@ components:
     Artifact:
       type: object
       properties:
+        id:
+          description: Artifact id
         project_id:
           type: integer
         experiment_id:
