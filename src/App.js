@@ -1,35 +1,34 @@
 import React, { Component } from "react";
 import { Admin, Resource } from "react-admin";
 import { createBrowserHistory as createHistory } from "history";
+
+import Dashboard from "./components/shared/Dashboard/Dashboard";
+import LayoutComponent from "./components/shared/Layout";
+
+// Icons
+import ExperimentIcon from "@material-ui/icons/Book";
+import BusinessCenter from "@material-ui/icons/BusinessCenter";
 import UserIcon from "@material-ui/icons/Group";
 
 // ENTITIES
-import Dashboard from "./components/shared/Dashboard/Dashboard";
-import LayoutComponent from "./components/shared/Layout";
+// Entities -> Experiments
+import ExperimentList from "./components/pages/experiments/List";
+import ExperimentShow from "./components/pages/experiments/Show";
+import ExperimentCreate from "./components/pages/experiments/Create";
+// Entities -> Projects
 import {
   ProjectList,
   ProjectEdit,
   ProjectCreate,
   ProjectShow
 } from "./components/pages/Projects";
-import {
-  ExperimentList,
-  ExperimentEdit,
-  ExperimentCreate
-} from "./components/pages/Experiments";
+// Entities -> Users
 import { UserList } from "./components/pages/Users";
 
-// DATA PROVIDER
+// Utils
 import dataProvider from "./context/dataProvider";
-// import fakeDataProvider from './dataProvider/FakeDataProvider';
-// const dataProvider = jsonServerProvider('http://0.0.0.0:8080/projects/1');
-// import { ListGuesser, EditGuesser, ShowGuesser } from 'react-admin';
-
-// UTILS
-import ExperimentIcon from "@material-ui/icons/Book";
-import BusinessCenter from "@material-ui/icons/BusinessCenter";
-import { activeProjectReducer } from "./context/entities/projectContext";
 import ProjectContext from "./context";
+import { activeProjectReducer } from "./context/entities/projectContext";
 
 const history = createHistory();
 
@@ -55,7 +54,7 @@ class App extends Component {
           <Resource
             name="experiments"
             list={ExperimentList}
-            edit={ExperimentEdit}
+            show={ExperimentShow}
             create={ExperimentCreate}
             icon={ExperimentIcon}
           />

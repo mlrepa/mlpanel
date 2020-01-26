@@ -6,13 +6,14 @@ const httpClient = fetchUtils.fetchJson;
 
 export default {
   getList: (resource, params) => {
-    // projectId can be extracted from `params.filter...`
-    console.warn(params);
     const { page, perPage } = params.pagination;
     const { field, order } = params.sort;
+
     const query = {
-      sort: JSON.stringify([field, order]),
-      range: JSON.stringify([(page - 1) * perPage, page * perPage - 1]),
+      _sort: field,
+      _order: order,
+      _start: (page - 1) * perPage,
+      _end: page * perPage - 1,
       project_id: params.filter.project_id
     };
     const url = `${apiUrl}/${resource}?${stringify(query)}`;
@@ -36,10 +37,16 @@ export default {
     });
   },
 
-  getOne: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}/${params.id}`).then(({ json }) => ({
+  getOne: (resource, params) => {
+    const query = {
+      project_id: JSON.parse(localStorage.getItem("current_project"))
+    };
+    const url = `${apiUrl}/${resource}/${params.id}?${stringify(query)}`;
+
+    return httpClient(url).then(({ json }) => ({
       data: json
-    })),
+    }));
+  },
 
   getMany: (resource, params) => {
     const query = {
@@ -90,18 +97,34 @@ export default {
     }).then(({ json }) => ({ data: json }));
   },
 
-  create: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}`, {
+  create: (resource, params) => {
+    const query = {
+      project_id: JSON.parse(localStorage.getItem("current_project"))
+    };
+
+    return httpClient(`${apiUrl}/${resource}?${stringify(query)}`, {
       method: "POST",
+      headers: new Headers({
+        "Content-Type": `multipart/form-data`
+      }),
       body: JSON.stringify(params.data)
     }).then(({ json }) => ({
       data: { ...params.data, id: json.id }
-    })),
+    }));
+  },
 
-  delete: (resource, params) =>
-    httpClient(`${apiUrl}/${resource}/${params.id}`, {
-      method: "DELETE"
-    }).then(({ json }) => ({ data: json })),
+  delete: (resource, params) => {
+    const query = {
+      project_id: JSON.parse(localStorage.getItem("current_project"))
+    };
+
+    return httpClient(
+      `${apiUrl}/${resource}/${params.id}?${stringify(query)}`,
+      {
+        method: "DELETE"
+      }
+    ).then(({ json }) => ({ data: json }));
+  },
 
   deleteMany: (resource, params) => {
     const query = {

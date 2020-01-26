@@ -4,8 +4,6 @@ import Typography from "@material-ui/core/Typography";
 import ActiveProjectContextSwitcher from "../ProjectSelect";
 import { withStyles } from "@material-ui/core/styles";
 
-// import Logo from './Logo';
-
 const styles = {
   title: {
     flex: 1,
@@ -26,7 +24,6 @@ const CustomFlowBar = withStyles(styles)(({ classes, ...props }) => (
       className={classes.title}
       id="react-admin-title"
     />
-    {/* <Logo /> */}
     <ActiveProjectContextSwitcher />
     <span className={classes.spacer} />
   </AppBar>
