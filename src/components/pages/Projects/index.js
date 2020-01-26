@@ -66,8 +66,6 @@ const ProjectFilter = props => (
 );
 
 export const ProjectList = ({ ...props }) => {
-  // console.log(props)
-
   return (
     <List {...props}>
       <Datagrid rowClick="show" {...props}>

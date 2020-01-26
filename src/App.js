@@ -9,6 +9,7 @@ import LayoutComponent from "./components/shared/Layout";
 import ExperimentIcon from "@material-ui/icons/Book";
 import BusinessCenter from "@material-ui/icons/BusinessCenter";
 import UserIcon from "@material-ui/icons/Group";
+import DoubleArrowIcon from "@material-ui/icons/DoubleArrow";
 
 // ENTITIES
 // Entities -> Experiments
@@ -24,11 +25,15 @@ import {
 } from "./components/pages/Projects";
 // Entities -> Users
 import { UserList } from "./components/pages/Users";
+// Entities -> Runs
+import RunList from "./components/pages/runs/List";
+import RunShow from "./components/pages/runs/Show";
 
 // Utils
 import dataProvider from "./context/dataProvider";
 import ProjectContext from "./context";
 import { activeProjectReducer } from "./context/entities/projectContext";
+import { activeExperimentReducer } from "./context/entities/experimentContext";
 
 const history = createHistory();
 
@@ -41,7 +46,10 @@ class App extends Component {
           layout={LayoutComponent}
           dashboard={Dashboard}
           dataProvider={dataProvider}
-          customReducers={{ activeProject: activeProjectReducer }}
+          customReducers={{
+            activeProject: activeProjectReducer,
+            activeExperiment: activeExperimentReducer
+          }}
         >
           <Resource
             name="projects"
@@ -57,6 +65,12 @@ class App extends Component {
             show={ExperimentShow}
             create={ExperimentCreate}
             icon={ExperimentIcon}
+          />
+          <Resource
+            name="runs"
+            list={RunList}
+            show={RunShow}
+            icon={DoubleArrowIcon}
           />
           <Resource name="users" list={UserList} icon={UserIcon} />
         </Admin>
