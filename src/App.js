@@ -10,6 +10,7 @@ import ExperimentIcon from "@material-ui/icons/Book";
 import BusinessCenter from "@material-ui/icons/BusinessCenter";
 import UserIcon from "@material-ui/icons/Group";
 import DoubleArrowIcon from "@material-ui/icons/DoubleArrow";
+import AssignmentIcon from '@material-ui/icons/Assignment';
 
 // ENTITIES
 // Entities -> Experiments
@@ -28,6 +29,9 @@ import { UserList } from "./components/pages/Users";
 // Entities -> Runs
 import RunList from "./components/pages/runs/List";
 import RunShow from "./components/pages/runs/Show";
+// Entities -> Models
+import ModelList from "./components/pages/models/List";
+import ModelShow from "./components/pages/models/Show";
 
 // Utils
 import dataProvider from "./context/dataProvider";
@@ -71,6 +75,12 @@ class App extends Component {
             list={RunList}
             show={RunShow}
             icon={DoubleArrowIcon}
+          />
+          <Resource
+            name="registered-models"
+            list={ModelList}
+            show={ModelShow}
+            icon={AssignmentIcon}
           />
           <Resource name="users" list={UserList} icon={UserIcon} />
         </Admin>

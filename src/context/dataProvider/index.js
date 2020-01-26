@@ -101,14 +101,22 @@ export default {
   create: (resource, params) => {
     const query = JSON.parse(localStorage.getItem("current_entities"));
 
+    const searchParams = Object.keys(params.data)
+      .map(key => {
+        return (
+          encodeURIComponent(key) + "=" + encodeURIComponent(params.data[key])
+        );
+      })
+      .join("&");
+
     return httpClient(`${apiUrl}/${resource}?${stringify(query)}`, {
       method: "POST",
       headers: new Headers({
         "Content-Type": `application/x-www-form-urlencoded`
       }),
-      body: JSON.stringify(params.data)
+      body: searchParams
     }).then(({ json }) => ({
-      data: { ...params.data, id: json.id }
+      data: { ...params.data, id: json[`${resource.slice(0,-1)}_id`] }
     }));
   },
 
