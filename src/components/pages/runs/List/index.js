@@ -10,6 +10,7 @@ const RunList = props => {
   return (
     <List
       {...restProps}
+      bulkActionButtons={false}
       filter={{
         project_id: activeProjectId,
         experiment_id: activeExperimentId

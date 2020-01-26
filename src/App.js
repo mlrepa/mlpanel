@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Admin, Resource, ShowGuesser } from "react-admin";
+import { Admin, Resource } from "react-admin";
 import { createBrowserHistory as createHistory } from "history";
 
 import Dashboard from "./components/shared/Dashboard/Dashboard";
@@ -9,6 +9,7 @@ import LayoutComponent from "./components/shared/Layout";
 import ExperimentIcon from "@material-ui/icons/Book";
 import BusinessCenter from "@material-ui/icons/BusinessCenter";
 import UserIcon from "@material-ui/icons/Group";
+import DoubleArrowIcon from "@material-ui/icons/DoubleArrow";
 
 // ENTITIES
 // Entities -> Experiments
@@ -65,7 +66,12 @@ class App extends Component {
             create={ExperimentCreate}
             icon={ExperimentIcon}
           />
-          <Resource name="runs" list={RunList} show={RunShow} icon={ExperimentIcon} />
+          <Resource
+            name="runs"
+            list={RunList}
+            show={RunShow}
+            icon={DoubleArrowIcon}
+          />
           <Resource name="users" list={UserList} icon={UserIcon} />
         </Admin>
       </ProjectContext.Provider>

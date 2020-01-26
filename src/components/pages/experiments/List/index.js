@@ -8,7 +8,11 @@ const ExperimentList = props => {
   const { activeProjectId, dispatch, ...restProps } = props;
 
   return (
-    <List {...restProps} filter={{ project_id: activeProjectId }}>
+    <List
+      {...restProps}
+      bulkActionButtons={false}
+      filter={{ project_id: activeProjectId }}
+    >
       <Datagrid>
         <TextField source="name" />
         <TextField source="lifecycle_stage" />

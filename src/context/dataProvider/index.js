@@ -1,5 +1,6 @@
 import { fetchUtils } from "react-admin";
 import { stringify } from "query-string";
+import Axios from "axios";
 
 const apiUrl = "http://35.227.124.46:8080";
 const httpClient = fetchUtils.fetchJson;
@@ -103,7 +104,7 @@ export default {
     return httpClient(`${apiUrl}/${resource}?${stringify(query)}`, {
       method: "POST",
       headers: new Headers({
-        "Content-Type": `multipart/form-data`
+        "Content-Type": `application/x-www-form-urlencoded`
       }),
       body: JSON.stringify(params.data)
     }).then(({ json }) => ({
@@ -114,12 +115,9 @@ export default {
   delete: (resource, params) => {
     const query = JSON.parse(localStorage.getItem("current_entities"));
 
-    return httpClient(
-      `${apiUrl}/${resource}/${params.id}?${stringify(query)}`,
-      {
-        method: "DELETE"
-      }
-    ).then(({ json }) => ({ data: json }));
+    return Axios.delete(
+      `${apiUrl}/${resource}/${params.id}?project_id=${query.project_id}`
+    ).then(res => ({ data: res.data }));
   },
 
   deleteMany: (resource, params) => {

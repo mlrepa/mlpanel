@@ -5,7 +5,8 @@ import {
   TopToolbar,
   ListButton,
   TextField,
-  UrlField
+  UrlField,
+  DeleteButton
 } from "react-admin";
 
 import FormattedDateField from "../../../shared/FormattedDateField";
@@ -14,9 +15,10 @@ const ExperimentTitle = ({ record }) => {
   return <span>{`Experiment ${record ? `"${record.name}"` : ""}`}</span>;
 };
 
-const ExperimentShowActions = ({ basePath }) => (
+const ExperimentShowActions = ({ basePath, data, resource }) => (
   <TopToolbar>
     <ListButton basePath={basePath} />
+    <DeleteButton basePath={basePath} record={data} resource={resource} />
   </TopToolbar>
 );
 
