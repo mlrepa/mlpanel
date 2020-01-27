@@ -10,7 +10,7 @@ import ExperimentIcon from "@material-ui/icons/Book";
 import BusinessCenter from "@material-ui/icons/BusinessCenter";
 import UserIcon from "@material-ui/icons/Group";
 import DoubleArrowIcon from "@material-ui/icons/DoubleArrow";
-import AssignmentIcon from '@material-ui/icons/Assignment';
+import AssignmentIcon from "@material-ui/icons/Assignment";
 
 // ENTITIES
 // Entities -> Experiments
@@ -18,12 +18,10 @@ import ExperimentList from "./components/pages/experiments/List";
 import ExperimentShow from "./components/pages/experiments/Show";
 import ExperimentCreate from "./components/pages/experiments/Create";
 // Entities -> Projects
-import {
-  ProjectList,
-  ProjectEdit,
-  ProjectCreate,
-  ProjectShow
-} from "./components/pages/Projects";
+import ProjectList from "./components/pages/projects/List";
+import ProjectCreate from "./components/pages/projects/Create";
+import ProjectShow from "./components/pages/projects/Show";
+
 // Entities -> Users
 import { UserList } from "./components/pages/Users";
 // Entities -> Runs
@@ -59,7 +57,6 @@ class App extends Component {
             name="projects"
             list={ProjectList}
             show={ProjectShow}
-            edit={ProjectEdit}
             create={ProjectCreate}
             icon={BusinessCenter}
           />

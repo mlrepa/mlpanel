@@ -116,7 +116,7 @@ export default {
       }),
       body: searchParams
     }).then(({ json }) => ({
-      data: { ...params.data, id: json[`${resource.slice(0,-1)}_id`] }
+      data: { ...params.data, id: json[`${resource.slice(0,-1)}_id`] || json.id }
     }));
   },
 
