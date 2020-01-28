@@ -132,6 +132,10 @@ paths:
       responses:
         201:
           description: Project successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         400:
           description: Bad project name OR project already exists
           content:
@@ -204,10 +208,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  project_id:
-                    type: integer
+                $ref: '#/components/schemas/Project'
         400:
           description: Only admin users can delete projects
           content:
@@ -232,6 +233,16 @@ paths:
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        400:
+          description: Project's tracking server was not started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         404:
           $ref: '#/components/responses/NotFound'
 
@@ -251,6 +262,10 @@ paths:
       responses:
         200:
           description: Project's tracking server is running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         404:
           $ref: '#/components/responses/NotFound'
         409:
@@ -278,6 +293,10 @@ paths:
       responses:
         200:
           description: Project's tracking server has terminated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         500:
           $ref: '#/components/responses/InternalServerError'
 
@@ -296,6 +315,10 @@ paths:
       responses:
         200:
           description: Project archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         404:
           $ref: '#/components/responses/NotFound'
         500:
@@ -316,6 +339,10 @@ paths:
       responses:
         200:
           description: Project restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         404:
           $ref: '#/components/responses/NotFound'
         500:
@@ -336,8 +363,16 @@ paths:
       responses:
         200:
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         400:
           description: Tracking server is not started yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
         404:
           $ref: '#/components/responses/NotFound'
         500:
