@@ -902,7 +902,7 @@ paths:
     get:
       tags:
         - model-versions
-      summary: Get model versions
+      summary: Get model version
       parameters:
         - name: version
           in: path
@@ -919,7 +919,7 @@ paths:
         - name: model_id
           in: query
           description: Model ID
-          required: false
+          required: true
           schema:
             type: string
       responses:
@@ -1003,7 +1003,8 @@ paths:
             default: '1'
         - name: type
           in: query
-          description: Deployment tyoe
+          description: Deployment type
+          required: true
           schema:
             type: string
             enum:
@@ -1323,7 +1324,7 @@ components:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         user_id:
           type: string
         name:
@@ -1352,6 +1353,7 @@ components:
       properties:
         id:
           description: Run id
+          type: string
         info:
           $ref: '#/components/schemas/RunInfo'
         data:
