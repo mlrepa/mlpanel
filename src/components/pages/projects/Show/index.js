@@ -7,8 +7,7 @@ import {
   UrlField,
   TopToolbar,
   ListButton,
-  DeleteButton,
-  showNotification
+  DeleteButton
 } from "react-admin";
 import Button from "@material-ui/core/Button";
 import Axios from "axios";
