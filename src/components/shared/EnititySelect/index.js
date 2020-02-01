@@ -12,23 +12,72 @@ import { setActiveExperiment as setActiveExperimentAction } from "../../../conte
 
 class EntitySelect extends Component {
   state = {
+    projects: [],
     data: []
   };
 
   getEntityList = query => {
     const {
-      props: { entity }
+      props: {
+        entity,
+        location: { pathname },
+        history,
+        setActiveProject,
+        setActiveExperiment
+      }
     } = this;
 
-    fetch(`http://35.227.124.46:8080/${entity}s?${stringify(query)}`, {
+    fetch(`http://35.227.124.46:8080/projects`, {
       method: "GET"
     })
       .then(r => r.json())
-      .then(res =>
-        this.setState({
-          data: res
-        })
-      )
+      .then(res => {
+        this.setState(
+          {
+            projects: res
+          },
+          () => {
+            const params = {
+              project_id: res.find(item => item.status === "running").id,
+              experiment_id: 0
+            };
+
+            const tempObj = JSON.stringify(params);
+
+            setActiveProject(res.find(item => item.status === "running").id);
+            setActiveExperiment(0);
+
+            localStorage.setItem("current_entities", tempObj);
+
+            history.push(`${pathname}?${stringify(params)}`);
+
+            if (
+              this.state.projects.filter(item => item.status === "running")
+                .length !== 0
+            ) {
+              fetch(
+                `http://35.227.124.46:8080/${entity}s?${stringify(params)}`,
+                {
+                  method: "GET"
+                }
+              )
+                .then(r => r.json())
+                .then(res => {
+                  if (entity === "project") {
+                    this.setState({
+                      data: res.filter(item => item.status === "running")
+                    });
+                  } else {
+                    this.setState({
+                      data: res
+                    });
+                  }
+                })
+                .catch(err => console.log(err));
+            }
+          }
+        );
+      })
       .catch(err => console.log(err));
   };
 
@@ -85,7 +134,7 @@ class EntitySelect extends Component {
     if (
       entity === "experiment" &&
       prevProps.activeProjectId &&
-      prevProps.activeProjectId !== activeProjectId
+      Number(prevProps.activeProjectId) !== Number(activeProjectId)
     ) {
       getEntityList({ project_id: activeProjectId });
 
