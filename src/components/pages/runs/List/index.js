@@ -7,15 +7,10 @@ import FormattedDateField from "../../../shared/FormattedDateField";
 const RunList = props => {
   const { activeProjectId, activeExperimentId, dispatch, ...restProps } = props;
 
+  const params = JSON.parse(localStorage.getItem("current_entities"));
+
   return (
-    <List
-      {...restProps}
-      bulkActionButtons={false}
-      filter={{
-        project_id: activeProjectId,
-        experiment_id: activeExperimentId
-      }}
-    >
+    <List {...restProps} bulkActionButtons={false} filter={params}>
       <Datagrid>
         <TextField label="Run" source="id" />
         <TextField label="Status" source="info.status" />

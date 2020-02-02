@@ -11,6 +11,7 @@ import BusinessCenter from "@material-ui/icons/BusinessCenter";
 import UserIcon from "@material-ui/icons/Group";
 import DoubleArrowIcon from "@material-ui/icons/DoubleArrow";
 import AssignmentIcon from "@material-ui/icons/Assignment";
+import AddToQueueIcon from "@material-ui/icons/AddToQueue";
 
 // ENTITIES
 // Entities -> Experiments
@@ -21,7 +22,6 @@ import ExperimentCreate from "./components/pages/experiments/Create";
 import ProjectList from "./components/pages/projects/List";
 import ProjectCreate from "./components/pages/projects/Create";
 import ProjectShow from "./components/pages/projects/Show";
-
 // Entities -> Users
 import { UserList } from "./components/pages/Users";
 // Entities -> Runs
@@ -30,6 +30,10 @@ import RunShow from "./components/pages/runs/Show";
 // Entities -> Models
 import ModelList from "./components/pages/models/List";
 import ModelShow from "./components/pages/models/Show";
+// Entities -> Deployments
+import DeploymentList from "./components/pages/deployments/List";
+import DeploymentShow from "./components/pages/deployments/Show";
+import DeploymentCreate from "./components/pages/deployments/Create";
 
 // Utils
 import dataProvider from "./context/dataProvider";
@@ -78,6 +82,13 @@ class App extends Component {
             list={ModelList}
             show={ModelShow}
             icon={AssignmentIcon}
+          />
+          <Resource
+            name="deployments"
+            list={DeploymentList}
+            show={DeploymentShow}
+            create={DeploymentCreate}
+            icon={AddToQueueIcon}
           />
           <Resource name="users" list={UserList} icon={UserIcon} />
         </Admin>

@@ -162,25 +162,29 @@ class EntitySelect extends Component {
         setActiveProject,
         setActiveExperiment,
         history,
-        location: { pathname, search }
+        location: { pathname }
       }
     } = this;
 
     const activeEntityId = event.target.value;
 
-    localStorage.setItem(
-      "current_entities",
-      JSON.stringify({
-        ...parse(search),
-        [`${entity}_id`]: activeEntityId
-      })
-    );
-
     const currentEntities = JSON.parse(
       localStorage.getItem("current_entities")
     );
 
-    history.push(`${pathname}?${stringify(currentEntities)}`);
+    localStorage.setItem(
+      "current_entities",
+      JSON.stringify({
+        ...currentEntities,
+        [`${entity}_id`]: activeEntityId
+      })
+    );
+
+    history.push(
+      `${pathname}?${stringify(
+        JSON.parse(localStorage.getItem("current_entities"))
+      )}`
+    );
 
     switch (entity) {
       case "project":
