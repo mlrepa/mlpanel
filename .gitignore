@@ -1,0 +1,27 @@
+# folders
+
+## IDEs
+.idea/
+.vscode/
+.DS_Store
+
+
+## python
+
+__pycache__/
+venv/
+
+## project
+workspace/
+*.ipynb_checkpoints/
+mlruns/*
+services/projects/examples/models/*
+
+# data
+
+## configs
+.env
+config/*
+
+## credentials
+.htpasswd

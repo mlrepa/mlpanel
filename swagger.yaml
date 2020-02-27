@@ -1,0 +1,1711 @@
+openapi: 3.0.1
+info:
+  title: mlpanel
+  description: ""
+  termsOfService: http://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/
+paths:
+  /login:
+    post:
+      summary: Login
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - password
+                - username
+              properties:
+                username:
+                  type: string
+                  description: username
+                password:
+                  type: string
+                  description: password
+        required: true
+      responses:
+        302:
+          description: Redirect to /index
+          content: {}
+  /logout:
+    get:
+      summary: Logout
+      responses:
+        302:
+          description: Logout and redirect to /index
+          content: {}
+  /register:
+    post:
+      summary: Register new user
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - password
+                - username
+              properties:
+                username:
+                  type: string
+                  description: username
+                password:
+                  type: string
+                  description: password
+        required: true
+      responses:
+        302:
+          description: 'Redirect: registered=>/index; username is busy || to short
+            password=>/registration'
+          content: {}
+
+  /projects:
+    get:
+      tags:
+        - projects
+      summary: List projects
+      parameters:
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Return projects list (dictionary)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsList'
+          # content:
+          #   application/json:
+          #     schema:
+          #       type: array
+          #       items:
+          #         $ref: '#/components/schemas/Projects'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - projects
+      summary: Create project
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - name
+              properties:
+                name:
+                  description: project name
+                  type: string
+                description:
+                  description: project description
+                  type: string
+                  default: ""
+        required: true
+      responses:
+        201:
+          description: Project successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        400:
+          description: Bad project name OR project already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}:
+    get:
+      tags:
+        - projects
+      summary: Get project
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - projects
+      summary: Update project
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                name:
+                  type: string
+                  description: new project name
+                description:
+                  type: string
+                  description: new project description
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - projects
+      summary: Delete project
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Project successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        400:
+          description: Only admin users can delete projects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{project_id}/healthcheck:
+    get:
+      tags:
+        - projects
+      summary: Check health of project
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        400:
+          description: Project's tracking server was not started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{project_id}/run:
+    put:
+      tags:
+        - projects
+      summary: Run project
+      description: Run project's tracking server
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Project's tracking server is running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/NotFound'
+        409:
+          description: Project is already running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/terminate:
+    put:
+      tags:
+        - projects
+      summary: Terminate project
+      description: Terminate project's tracking server
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Project's tracking server has terminated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/archive:
+    put:
+      tags:
+        - projects
+      summary: Archive projects
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Project archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/restore:
+    put:
+      tags:
+        - projects
+      summary: Restore project
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Project restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /projects/{project_id}/ping:
+    get:
+      tags:
+        - projects
+      summary: Ping project's tracking server
+      parameters:
+        - name: project_id
+          in: path
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        400:
+          description: Tracking server is not started yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /experiments:
+    get:
+      tags:
+        - experiments
+      summary: List of experiments
+      parameters:
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: string
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Experiment'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - experiments
+      summary: Create experiment
+      parameters:
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - name
+                - description
+              properties:
+                name:
+                  type: string
+                  description: Experiment name
+                description:
+                  type: string
+                  description: Description of experiment
+                user_id:
+                  type: string
+
+        required: true
+      responses:
+        201:
+          description: Experiment successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiment'
+        400:
+          description: Experiment already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /experiments/{experiment_id}:
+    get:
+      tags:
+        - experiments
+      summary: Get experiment
+      parameters:
+        - name: experiment_id
+          in: path
+          description: Experiment ID
+          required: true
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiment'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - experiments
+      summary: Delete experiment
+      parameters:
+        - name: experiment_id
+          in: path
+          description: Experiment ID
+          required: true
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  experiment_id:
+                    type: integer
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /runs:
+    get:
+      tags:
+        - runs
+      summary: List runs
+      parameters:
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+        - name: experiment_id
+          in: query
+          description: Experiment ID
+          required: true
+          schema:
+            type: string
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Run'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /runs/{run_id}:
+    get:
+      tags:
+        - runs
+      summary: Get run
+      parameters:
+        - name: run_id
+          in: path
+          description: Run ID
+          required: true
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - runs
+      summary: Delete run
+      parameters:
+        - name: run_id
+          in: path
+          description: run id
+          required: true
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                properties:
+                  run_id:
+                    type: string
+        400:
+          description: Run already marked as deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /registered-models:
+    get:
+      tags:
+        - registered models
+      summary: List models from Model Registry
+      parameters:
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegisteredModel'
+        404:
+          $ref: '#/components/responses/NotFound'
+
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - registered models
+      summary: Register model
+      description: Create new model if does't exist or create new version otherwise
+      parameters:
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - name
+                - source
+                - run_id
+              properties:
+                name:
+                  description: model name
+                  type: string
+                source:
+                  description: path (URI) to the model artifact
+                  type: string
+                run_id:
+                  type: string
+        required: true
+      responses:
+        201:
+          description: Model successfully registred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredModel'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /registered-models/{model_id}:
+    get:
+      tags:
+        - registered models
+      summary: Get model from Model Registry
+      parameters:
+        - name: model_id
+          in: path
+          description: Model ID
+          required: true
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: project id
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredModel'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - registered models
+      summary: Delete model
+      parameters:
+        - name: model_id
+          in: path
+          description: model id
+          required: true
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                properties:
+                  model_id:
+                    type: string
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /model-versions:
+    get:
+      tags:
+        - model-versions
+      summary: Get model versions
+      parameters:
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+        - name: model_id
+          in: query
+          description: Model ID
+          required: false
+          schema:
+            type: string
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+              type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ModelVersion'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /model-versions/{version}:
+    get:
+      tags:
+        - model-versions
+      summary: Get model version
+      parameters:
+        - name: version
+          in: path
+          description: Version number
+          required: true
+          schema:
+            type: string
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+        - name: model_id
+          in: query
+          description: Model ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelVersion'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /deployments:
+    get:
+      tags:
+        - deployments
+      summary: List deployments
+      parameters:
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Deployment'
+    post:
+      tags:
+        - deployments
+      summary: Create deployments
+      parameters:
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+        - name: model_id
+          in: query
+          description: Model ID
+          required: true
+          schema:
+            type: string
+        - name: version
+          in: query
+          description: Model version
+          required: true
+          schema:
+            type: string
+            default: '1'
+        - name: type
+          in: query
+          description: Deployment type
+          required: true
+          schema:
+            type: string
+            enum:
+              - local
+              - gcp
+      responses:
+        202:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployment_id:
+                    description: Deployment ID
+                    type: string
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /deployments/{deployment_id}:
+    get:
+      tags:
+        - deployments
+      summary: Get deployment
+      parameters:
+        - name: deployment_id
+          in: path
+          description: Deployment ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - deployments
+      summary: Delete deployment (mark as deleted)
+      parameters:
+        - name: deployment_id
+          in: path
+          description: Deployment ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployment_id:
+                    type: string
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /deployments/{deployment_id}/run:
+    put:
+      tags:
+        - deployments
+      summary: Run deployment
+      parameters:
+        - name: deployment_id
+          in: path
+          description: Deployment ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+               type: object
+               properties:
+                 deployment_id:
+                   type: string
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /deployments/{deployment_id}/stop:
+    put:
+      tags:
+        - deployments
+      summary: Stop deployment
+      parameters:
+        - name: deployment_id
+          in: path
+          description: Deployment ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployment_id:
+                    type: string
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /deployments/{deployment_id}/predict:
+    post:
+      tags:
+        - deployments
+      summary: Predict
+      parameters:
+        - name: deployment_id
+          in: path
+          description: Deployment ID
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - data
+              properties:
+                data:
+                  type: string
+                  example: '[[1,2,3,4]]'
+        required: true
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prediction:
+                    description: Prediction result
+                    type: string
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /deployments/{deployment_id}/ping:
+    get:
+      tags:
+        - deployments
+      summary: Get deployment
+      parameters:
+        - name: deployment_id
+          in: path
+          description: Deployment ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+        400:
+          description: Deployment's model is not loaded yet
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /artifacts:
+    get:
+      tags:
+        - artifacts
+      summary: List artifacts
+      parameters:
+        - name: project_id
+          in: query
+          description: Project ID
+          required: true
+          schema:
+            type: integer
+        - name: run_id
+          in: query
+          description: Run ID
+          required: true
+          schema:
+            type: string
+        - name: _sort
+          in: query
+          description: Sort key
+          required: false
+          schema:
+            type: string
+        - name: _order
+          in: query
+          description: Sorting order
+          required: false
+          schema:
+            type: string
+            default: ASC
+            enum:
+              - ASC
+              - DESC
+        - name: _start
+          in: query
+          description: Start index
+          required: false
+          schema:
+            type: integer
+        - name: _end
+          in: query
+          description: End index
+          required: false
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Artifact'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /stat:
+    get:
+      tags:
+        - miscellaneous
+      summary: "Resourses statistics"
+      description: ""
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Statistics"
+
+components:
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: integer
+        description:
+          type: string
+        name:
+          type: string
+        status:
+          $ref: '#/components/schemas/ProjectStatus'
+        mlflowUri:
+          type: string
+        createdBy:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    ProjectStatus:
+      type: string
+      enum:
+        - running
+        - terminated
+        - archived
+
+    ProjectsList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Project'
+
+    Experiment:
+      description: Experiment object
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        name:
+          type: string
+        artifact_location:
+          type: string
+        lifecycle_stage:
+          type: string
+          enum:
+            - active
+            - deleted
+        last_update_time:
+          type: string
+          format: date-time
+        creation_time:
+          type: string
+          format: date-time
+        description:
+          description: Description of experiment
+          type: string
+        project_id:
+          type: integer
+
+    Run:
+      type: object
+      properties:
+        id:
+          description: Run id
+          type: string
+        info:
+          $ref: '#/components/schemas/RunInfo'
+        data:
+          $ref: '#/components/schemas/RunData'
+
+    RunInfo:
+      type: object
+      properties:
+        run_id:
+          type: string
+        experiment_id:
+          type: integer
+        user_id:
+          type: string
+        status:
+          type: string
+          enum:
+            - running
+            - scheduled
+            - finished
+            - failed
+            - killed
+        start_time:
+          type: string
+          format: timestamp
+        end_time:
+          type: string
+          format: timestamp
+        artifact_uri:
+          type: string
+        lifecycle_stage:
+          type: string
+          enum:
+            - active
+            - deleted
+        project_id:
+          type: integer
+
+    RunData:
+      type: object
+      properties:
+        metrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Metric'
+        params:
+          type: array
+          items:
+            $ref: '#/components/schemas/Param'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunTag'
+
+    Metric:
+      type: object
+      properties:
+        key:
+          description: Metric name
+          type: string
+        value:
+          type: number
+          format: float
+        timestamp:
+          type: string
+          format: timestamp
+        step:
+          type: string
+          format: int32
+
+    Param:
+      type: object
+      properties:
+        key:
+          description: Parameter name
+          type: string
+        value:
+          type: string
+
+    RunTag:
+      type: object
+      properties:
+        key:
+          description: Tag name
+          type: string
+        value:
+          type: string
+
+#    VersionedArtifact:
+#      type: object
+#      properties:
+#        artifact:
+#          $ref: '#/components/schemas/Artifact'
+#        latest_version:
+#          type: object
+#          properties:
+#            version:
+#              type: integer
+#              format: int32
+#        versions:
+#          type: array
+#          items:
+#            $ref: '#/components/schemas/ArtifactVersion'
+#
+    Artifact:
+      type: object
+      properties:
+        id:
+          description: Artifact id
+        project_id:
+          type: integer
+        experiment_id:
+          type: string
+        run_id:
+          type: string
+        type:
+          type: string
+          enum:
+            - File
+            - Folder
+            - Model
+        creation_timestamp:
+          type: string
+          format: date-time
+        root_uri:
+          description: absolute path to artifact location
+          type: string
+        path:
+          description: relative path artifact
+          type: string
+#
+#    ArtifactVersion:
+#      type: object
+#      properties:
+#        version:
+#          type: object
+#          properties:
+#            artifact:
+#              $ref: '#/components/schemas/Artifact'
+#            version:
+#              type: integer
+#              format: int32
+
+
+
+    RegisteredModel:
+      type: object
+      properties:
+        id:
+          description: Model ID (name)
+          type: string
+        project_id:
+          description: Project ID
+          type: integer
+        creation_timestamp:
+          type: string
+          format: date-time
+        last_updated_timestamp:
+          type: string
+          format: date-time
+
+    ModelVersion:
+      type: object
+      properties:
+        id:
+          description: Model Version id (version number)
+          type: string
+        model_id:
+          description: Model ID (name)
+          type: string
+        project_id:
+          description: Project ID
+          type: integer
+        version:
+          description: Version number
+          type: string
+          format: int32
+        creation_timestamp:
+          type: string
+          format: date-time
+        last_updated_timestamp:
+          type: string
+          format: date-time
+        run_id:
+          type: string
+        model_uri:
+          description: Path to model artifact
+          type: string
+
+    Deployment:
+      type: object
+      properties:
+        id:
+          description: Deployment ID
+          type: string
+        project_id:
+          description: Project ID
+          type: integer
+        model_id:
+          description: Model ID
+          type: string
+        version:
+          description: Model version
+          type: string
+        model_uri:
+          description: Model URI
+          type: string
+        type:
+          description: Deployment type
+          type: string
+          enum:
+            - local
+            - gcp
+        created_at:
+          description: Creation time
+          type: string
+          format: date-time
+        host:
+          description: Host address
+          type: string
+        port:
+          description: Port number
+          type: string
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+
+    CPU:
+      type: "object"
+      properties:
+        usage:
+          type: "number"
+          format: "float"
+        units:
+          type: "string"
+          default: "percentage"
+
+    ProjectStatistics:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+        name:
+          type: "string"
+        stat:
+          type: "object"
+          properties:
+            cpu:
+              $ref: "#/components/schemas/CPU"
+            memory:
+              type: "object"
+              properties:
+                usage:
+                  type: "object"
+                  properties:
+                    data:
+                      type: "number"
+                      format: "float"
+                    dirty:
+                      type: "number"
+                      format: "float"
+                    lib:
+                      type: "number"
+                      format: "float"
+                    pss:
+                      type: "number"
+                      format: "float"
+                    rss:
+                      type: "number"
+                      format: "float"
+                    shared:
+                      type: "number"
+                      format: "float"
+                    swap:
+                      type: "number"
+                      format: "float"
+                    text:
+                      type: "number"
+                      format: "float"
+                    uss:
+                      type: "number"
+                      format: "float"
+                    vms:
+                      type: "number"
+                      format: "float"
+                units:
+                  type: "string"
+                  default: "mb"
+                percentage:
+                  type: "number"
+                  format: "double"
+
+    Statistics:
+      type: "object"
+      properties:
+        projects:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/ProjectStatistics"
+        systme:
+          type: "object"
+          properties:
+            cpu:
+              $ref: "#/components/schemas/CPU"
+
+            memory:
+              type: "object"
+              properties:
+                usage:
+                  type: "object"
+                  properties:
+                    active:
+                      type: "number"
+                      format: "float"
+                    available:
+                      type: "number"
+                      format: "float"
+                    buffers:
+                      type: "number"
+                      format: "float"
+                    cached:
+                      type: "number"
+                      format: "float"
+                    free:
+                      type: "number"
+                      format: "float"
+                    inactive:
+                      type: "number"
+                      format: "float"
+                    shared:
+                      type: "number"
+                      format: "float"
+                    slab:
+                      type: "number"
+                      format: "float"
+                    total:
+                      type: "number"
+                      format: "float"
+                    used:
+                      type: "number"
+                      format: "float"
+                units:
+                  type: "string"
+                  default: "mb"
+                percentage:
+                  type: "number"
+                  format: "double"

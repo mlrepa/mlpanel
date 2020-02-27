@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  projects:
+
+    env_file:
+      - .env
+    build:
+      context: services/projects
+    image: mlpanel-projects:latest
+    container_name: mlpanel-projects
+    ports:
+      - "$MLFLOW_TRACKING_SERVERS_PORTS_RANGE:$MLFLOW_TRACKING_SERVERS_PORTS_RANGE"
+      - 8080:8080
+    expose:
+      - "$MLFLOW_TRACKING_SERVERS_PORTS_RANGE"
+      - 8080
+    volumes:
+      - ./config:/home/config
+      - ./services/projects:/home/projects
+      - ./common:/home/common
+      - $WORKSPACE:$WORKSPACE
+
+  deploy:
+
+    env_file:
+      - .env
+    build:
+      context: ./
+      dockerfile: services/deploy/Dockerfile
+    image: mlpanel-deploy:latest
+    container_name: mlpanel-deploy
+    ports:
+      - 9000:9000
+    volumes:
+      - ./config:/home/config
+      - ./services/deploy:/home/deploy
+      - ./common:/home/common
+      - $WORKSPACE:$WORKSPACE
+
+  ui:
+    env_file:
+      - .env
+    build:
+      context: ./
+      dockerfile: services/ui/Dockerfile
+    image: mlpanel-ui:latest
+    container_name: mlpanel-ui
+    ports:
+    - 3000:3000
