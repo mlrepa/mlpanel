@@ -6,28 +6,34 @@
 from fastapi import APIRouter, Form
 from http import HTTPStatus
 import requests
-from starlette.responses import JSONResponse, Response
+from starlette.responses import JSONResponse
+from starlette.requests import Request
 from typing import Text
 
-from projects.src.project_management import ProjectManager
 from common.utils import error_response
+from projects.src.project_management import ProjectManager
+from projects.src.utils import log_request
 
 router = APIRouter()  # pylint: disable=invalid-name
 
 
 @router.get('/projects', tags=['projects'])
-def list_projects() -> JSONResponse:
+def list_projects(request: Request) -> JSONResponse:
     """Get projects list.
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request)
+
     project_manager = ProjectManager()
     projects = project_manager.list_projects()
     return JSONResponse(projects)
 
 
 @router.post('/projects', tags=['projects'])
-def create_project(name: Text = Form(...), description: Text = Form('')) -> JSONResponse:
+def create_project(request: Request, name: Text = Form(...),
+                   description: Text = Form('')) -> JSONResponse:
     """Create project.
     Args:
         name {Text}: project name
@@ -35,6 +41,11 @@ def create_project(name: Text = Form(...), description: Text = Form('')) -> JSON
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request, {
+        'name': name,
+        'description': description
+    })
 
     project_manager = ProjectManager()
     project_id = project_manager.create_project(name, description)
@@ -44,7 +55,7 @@ def create_project(name: Text = Form(...), description: Text = Form('')) -> JSON
 
 
 @router.get('/projects/{project_id}', tags=['projects'])
-def get_project(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
+def get_project(request: Request, project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
     """Get project.
     Args:
         project_id {int}: project id
@@ -52,13 +63,15 @@ def get_project(project_id: int) -> JSONResponse:  # pylint: disable=invalid-nam
         starlette.responses.JSONResponse
     """
 
+    log_request(request)
+
     project_manager = ProjectManager()
     project = project_manager.get_project(project_id)
     return JSONResponse(project)
 
 
 @router.put('/projects/{project_id}', tags=['projects'])
-def update_project(project_id: int, name: Text = Form(None),
+def update_project(request: Request, project_id: int, name: Text = Form(None),
                    description: Text = Form(None)) -> JSONResponse:
     """Update project.
     Args:
@@ -68,6 +81,12 @@ def update_project(project_id: int, name: Text = Form(None),
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request, {
+        'project_id': project_id,
+        'name': name,
+        'description': description
+    })
 
     project_manager = ProjectManager()
     if name is not None:
@@ -82,13 +101,17 @@ def update_project(project_id: int, name: Text = Form(None),
 
 
 @router.delete('/projects/{project_id}', tags=['projects'])
-def delete_project(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
+def delete_project(request: Request, project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
     """Delete project.
     Args:
         project_id {int}: project id
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request, {
+        'project_id': project_id
+    })
 
     project_manager = ProjectManager()
     project = project_manager.get_project(project_id)
@@ -99,13 +122,15 @@ def delete_project(project_id: int) -> JSONResponse:  # pylint: disable=invalid-
 
 
 @router.get('/projects/{project_id}/healthcheck', tags=['projects'])
-def project_healthcheck(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
+def project_healthcheck(request: Request, project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
     """Get project healthcheck (check if project's tracking server process was started).
     Args:
         project_id {int}: project id
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request)
 
     project_manager = ProjectManager()
     project = project_manager.get_project(project_id)
@@ -118,13 +143,17 @@ def project_healthcheck(project_id: int) -> JSONResponse:  # pylint: disable=inv
 
 
 @router.put('/projects/{project_id}/run', tags=['projects'])
-def run_project(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
+def run_project(request: Request, project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
     """Run project's tracking server.
     Args:
         project_id {int}: project id
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request, {
+        'project_id': project_id
+    })
 
     project_manager = ProjectManager()
     running = project_manager.run(project_id)
@@ -140,13 +169,17 @@ def run_project(project_id: int) -> JSONResponse:  # pylint: disable=invalid-nam
 
 
 @router.put('/projects/{project_id}/terminate', tags=['projects'])
-def terminate_project(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
+def terminate_project(request: Request, project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
     """Terminate project's tracking server.
     Args:
         project_id {int}: project id
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request, {
+        'project_id': project_id
+    })
 
     project_manager = ProjectManager()
     project_manager.terminate(project_id)
@@ -156,13 +189,17 @@ def terminate_project(project_id: int) -> JSONResponse:  # pylint: disable=inval
 
 
 @router.put('/projects/{project_id}/archive', tags=['projects'])
-def archive(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
+def archive(request: Request, project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
     """Archive project.
     Args:
         id {int}: project id
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request, {
+        'project_id': project_id
+    })
 
     project_manager = ProjectManager()
     project_manager.terminate(project_id)
@@ -173,13 +210,17 @@ def archive(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,re
 
 
 @router.put('/projects/{project_id}/restore', tags=['projects'])
-def restore(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
+def restore(request: Request, project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,redefined-builtin
     """Restore project.
     Args:
         project_id {int}: project id
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request, {
+        'project_id': project_id
+    })
 
     project_manager = ProjectManager()
     project_manager.restore(project_id)
@@ -189,7 +230,7 @@ def restore(project_id: int) -> JSONResponse:  # pylint: disable=invalid-name,re
 
 
 @router.get('/projects/{project_id}/ping', tags=['projects'])
-def ping(project_id: int) -> JSONResponse:
+def ping(request: Request, project_id: int) -> JSONResponse:
     """Ping project's tracking server.
     Args:
         project_id {int}: project id
@@ -197,8 +238,10 @@ def ping(project_id: int) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request)
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     project = project_manager.get_project(project_id)
 
     try:

@@ -12,7 +12,6 @@ from projects.src import config, app
 @pytest.fixture(scope='module')
 def client():
     
-    # config.WORKSPACE = 'tmp_ws'
     app.init()
     
     return TestClient(app.app)
@@ -49,7 +48,7 @@ def wait_loading(url: Text, timeout: int = 10):
 
 
 def teardown_module():
-    shutil.rmtree(config.WORKSPACE, ignore_errors=True)
+    shutil.rmtree(config.Config().get('WORKSPACE'), ignore_errors=True)
 
 
 # /projects (GET) - list project

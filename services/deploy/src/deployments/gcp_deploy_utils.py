@@ -4,11 +4,13 @@ get external ip, delete instances; working with firewall rules.
 """
 
 # pylint: disable=wrong-import-order
-import time
-
 import googleapiclient.discovery
 import googleapiclient.errors
+import time
 from typing import Dict, List, Optional, Text
+
+
+from deploy.src.config import Config
 
 
 def gcp_create_instance(name: Text, gcp_project: Text, zone: Text, machine_type_name: Text,
@@ -44,7 +46,7 @@ def gcp_create_instance(name: Text, gcp_project: Text, zone: Text, machine_type_
     # pylint: disable=too-many-arguments
 
     compute = googleapiclient.discovery.build('compute', 'v1')
-    image_response = compute.images().get(image=image, project=gcp_project).execute()  # pylint: disable=no-member
+    image_response = compute.images().get(image=image, project='cos-cloud').execute()  # pylint: disable=no-member
     source_disk_image = image_response['selfLink']
     machine_type = f'zones/{zone}/machineTypes/{machine_type_name}'
     config = {
@@ -341,7 +343,8 @@ def gcp_deploy_model(model_uri: Text, docker_image: Text, instance_name: Text,
                      f'docker run -v /home/gac.json:/root/gac.json -p {port}:{port} {docker_image} ' \
                      f'/bin/bash -c ' \
                      f'"export GOOGLE_APPLICATION_CREDENTIALS=/root/gac.json && ' \
-                     f'mlflow models serve --no-conda -m {model_uri} -h 0.0.0.0 -p {port}" '
+                     f'mlflow models serve --no-conda -m {model_uri} --host 0.0.0.0 --port {port} ' \
+                     f'--workers {Config().get("DEPLOY_SERVER_WORKERS")} | tee -a deployment.log" '
     gcp_create_instance(
         name=instance_name,
         gcp_project=gcp_project,

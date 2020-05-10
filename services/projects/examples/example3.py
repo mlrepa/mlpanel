@@ -5,14 +5,14 @@ Example3
 """
 
 import argparse
-import joblib
-import numpy as np
 import mlflow
 from mlflow.sklearn import log_model
-import os
-from sklearn import datasets
-from sklearn.svm import SVC
+import pandas as pd
 from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.svm import SVC
+import tensorflow_data_validation as tfdv
 
 
 if __name__ == '__main__':
@@ -23,45 +23,46 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    path = os.path.dirname(os.path.abspath(__file__))
     experiment_name = 'IrisSVC'
     mlflow.set_experiment(experiment_name)
 
+    DATASET = 'data/iris.csv'
+    TARGET_LABELED_DATASET = 'data/labeled_iris.csv'
+    TARGET_COLUMN = 'species'
+    IRIS_STATISTICS = '/tmp/stats.tfdv'
+
     with mlflow.start_run() as run:
+        dataset = pd.read_csv(DATASET)
+        dataset[TARGET_COLUMN] = LabelEncoder().fit_transform(dataset[TARGET_COLUMN])
+        dataset.to_csv(TARGET_LABELED_DATASET, index=False)
 
-        # import some data to play with
-        iris = datasets.load_iris()
+        statistics = tfdv.generate_statistics_from_dataframe(dataset.drop(TARGET_COLUMN, axis=1))
 
-        dataset = os.path.join(path, 'data/iris_data.joblib')
+        with open(IRIS_STATISTICS, 'wb') as out_stats:
+            out_stats.write(statistics.SerializeToString())
 
-        joblib.dump(iris, dataset)
-        # with open(dataset, 'w') as data_f:
-        #     json.dump(iris, data_f)
+        mlflow.log_artifact(DATASET)
+        mlflow.log_artifact(TARGET_LABELED_DATASET)
+        mlflow.log_artifact(IRIS_STATISTICS)
 
-        mlflow.log_artifact(dataset)
+        train, test = train_test_split(dataset, test_size=0.2, random_state=42)
 
-        iris_X = iris.data
-        iris_y = iris.target
+        X_train = train.drop(TARGET_COLUMN, axis=1).astype('float32')
+        y_train = train[TARGET_COLUMN].astype('int32')
 
-        indices = np.random.permutation(len(iris_X))
-
-        mlflow.log_param('indices', indices.tolist())
-
-        iris_X_train = iris_X[indices[:-10]]
-        iris_y_train = iris_y[indices[:-10]]
-        iris_X_test = iris_X[indices[-10:]]
-        iris_y_test = iris_y[indices[-10:]]
+        X_test = test.drop(TARGET_COLUMN, axis=1).astype('float32')
+        y_test = test[TARGET_COLUMN].astype('int32')
 
         svc_model = SVC(C=args.C, kernel=args.kernel)
 
         # Create an instance of Logistic Regression Classifier and fit the data.
-        svc_model.fit(iris_X_train, iris_y_train)
+        svc_model.fit(X_train, y_train)
 
         mlflow.log_params(svc_model.get_params())
 
-        prediction = svc_model.predict(iris_X_test)
+        prediction = svc_model.predict(X_test)
 
-        f1 = f1_score(iris_y_test, prediction, average='macro')
+        f1 = f1_score(y_test, prediction, average='macro')
 
         mlflow.log_metric('f1', f1)
 

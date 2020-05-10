@@ -1,7 +1,9 @@
+import json
 import pytest
 import re
 import shutil
 from starlette.testclient import TestClient
+import time
 
 from deploy.src import app, config
 
@@ -9,15 +11,20 @@ from deploy.src import app, config
 @pytest.fixture(scope='module')
 def client():
 
-    config.WORKSPACE = 'tmp_ws'
     app.init()
 
     return TestClient(app.app)
 
 
+@pytest.fixture(scope='module')
+def deployment_run_timeout():
+
+    return 20
+
+
 def teardown_module():
 
-    shutil.rmtree(config.WORKSPACE, ignore_errors=True)
+    shutil.rmtree(config.Config().get('WORKSPACE'), ignore_errors=True)
 
 
 # Tests on default (just created = empty) database
@@ -78,7 +85,7 @@ def test_create_deployment(client):
             'project_id': 1,
             'model_id': 'IrisLogregModel',
             'version': '1',
-            'model_uri': './tests/model',
+            'model_uri': './tests/integration/base/model',
             'type': 'local'
         }
     )
@@ -98,6 +105,40 @@ def test_create_deployment(client):
     assert re.match(r'''^([\s\d]+)$''', deployment.get('port', '')) is not None
 
 
+def test_predict(client, deployment_run_timeout):
+
+    deployment_is_running = False
+    start = time.time()
+
+    while not deployment_is_running:
+
+        ping_resp = client.get('/deployments/1/ping')
+
+        if ping_resp.status_code == 200:
+            deployment_is_running = True
+
+        if time.time() - start > deployment_run_timeout:
+            break
+
+    predict_resp = client.post(
+        '/deployments/1/predict',
+        data={
+            'data': '{"schema": {"fields":[{"name":"index","type":"integer"},'
+                    '{"name":"sepal_length","type":"number"},{"name":"sepal_width","type":"number"},'
+                    '{"name":"petal_length","type":"number"},{"name":"petal_width","type":"number"}],'
+                    '"primaryKey":["index"],"pandas_version":"0.20.0"}, '
+                    '"data": [{"index":0,"sepal_length":5.1,"sepal_width":3.5,"petal_length":1.4,'
+                    '"petal_width":0.2},{"index":1,"sepal_length":4.9,"sepal_width":3.0,"petal_length":1.4,'
+                    '"petal_width":0.2},{"index":2,"sepal_length":4.7,"sepal_width":3.2,"petal_length":1.3,'
+                    '"petal_width":0.2},{"index":3,"sepal_length":4.6,"sepal_width":3.1,"petal_length":1.5,'
+                    '"petal_width":0.2}]}'
+        }
+    )
+
+    assert predict_resp.status_code == 200
+    assert len(json.loads(predict_resp.json()['prediction'])) == 4
+
+
 # # POST /deployments
 def test_create_bad_type_deployment(client):
 
@@ -107,12 +148,12 @@ def test_create_bad_type_deployment(client):
             'project_id': 1,
             'model_id': 'IrisLogregModel',
             'version': '1',
-            'model_uri': './tests/model',
+            'model_uri': './tests/integration/model_without_schema/model',
             'type': 'unknown'
         }
     )
 
-    assert create_response.status_code == 404
+    assert create_response.status_code == 400
     assert create_response.json().get('message') == 'Invalid deployment type: unknown'
 
 
@@ -148,3 +189,4 @@ def test_delete_deployment(client):
 
     assert get_response.status_code == 404
     assert get_response.json().get('message') == 'Deployment with ID 1 not found'
+

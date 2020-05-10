@@ -7,19 +7,21 @@ from fastapi import APIRouter, Form
 from http import HTTPStatus
 import requests
 from starlette.responses import JSONResponse
+from starlette.requests import Request
 from typing import Optional, Text
 
+from common.utils import error_response, is_model, ModelDoesNotExistError
 from projects.src.project_management import ProjectManager
 from projects.src.routers.utils import get_model_versions, filter_model_versions, \
     check_if_project_and_model_exist
-from common.utils import error_response, is_model, ModelDoesNotExistError
+from projects.src.utils import log_request
 
 
 router = APIRouter()  # pylint: disable=invalid-name
 
 
 @router.get('/registered-models', tags=['registered-models'])
-def list_models(project_id: int) -> JSONResponse:
+def list_models(request: Request, project_id: int) -> JSONResponse:
     """Get models list.
     Args:
         project_id {int}: project id
@@ -27,8 +29,10 @@ def list_models(project_id: int) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request)
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     resp = requests.get(f'{url}/api/2.0/preview/mlflow/registered-models/list')
     registered_models = []
 
@@ -46,6 +50,7 @@ def list_models(project_id: int) -> JSONResponse:
 
 @router.post('/registered-models', tags=['registered-models'])
 def register_model(
+        request: Request,
         project_id: int,
         name: Text = Form(...),
         source: Text = Form(...),
@@ -61,11 +66,18 @@ def register_model(
         starlette.responses.JSONResponse
     """
 
+    log_request(request, {
+        'project_id': project_id,
+        'name': name,
+        'source': source,
+        'run_id': run_id
+    })
+
     project_manager = ProjectManager()
     if not is_model(source):
         raise ModelDoesNotExistError(f'Model {source} does not exist or is not MLflow model')
 
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     requests.post(
         url=f'{url}/api/2.0/preview/mlflow/registered-models/create',
         json={'name': name}
@@ -94,7 +106,7 @@ def register_model(
 
 
 @router.get('/registered-models/{model_id}', tags=['registered-models'])
-def get_model(model_id: Text, project_id: int) -> JSONResponse:
+def get_model(request: Request, model_id: Text, project_id: int) -> JSONResponse:
     """Get model.
 
     Args:
@@ -104,8 +116,10 @@ def get_model(model_id: Text, project_id: int) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request)
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     model_resp = requests.post(
         url=f'{url}/api/2.0/preview/mlflow/registered-models/get-details',
         json={'registered_model': {'name': model_id}}
@@ -129,7 +143,7 @@ def get_model(model_id: Text, project_id: int) -> JSONResponse:
 
 
 @router.delete('/registered-models/{model_id}', tags=['registered-models'])
-def delete_model(model_id: Text, project_id: int) -> JSONResponse:
+def delete_model(request: Request, model_id: Text, project_id: int) -> JSONResponse:
     """Delete model.
     Args:
         model_id {Text}: model id (name)
@@ -138,8 +152,13 @@ def delete_model(model_id: Text, project_id: int) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request, {
+        'project_id': project_id,
+        'model_id': model_id
+    })
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     model_resp = requests.delete(
         url=f'{url}/api/2.0/preview/mlflow/registered-models/delete',
         json={'registered_model': {'name': model_id}}
@@ -155,7 +174,8 @@ def delete_model(model_id: Text, project_id: int) -> JSONResponse:
 
 
 @router.get('/model-versions', tags=['model-versions'])
-def list_model_versions(project_id: int, model_id: Optional[Text] = None) -> JSONResponse:
+def list_model_versions(request: Request, project_id: int,
+                        model_id: Optional[Text] = None) -> JSONResponse:
     """Get model versions list.
     Args:
         project_id {int}: project id
@@ -163,6 +183,8 @@ def list_model_versions(project_id: int, model_id: Optional[Text] = None) -> JSO
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request)
 
     model_versions = get_model_versions(project_id)
 
@@ -193,7 +215,8 @@ def list_model_versions(project_id: int, model_id: Optional[Text] = None) -> JSO
 
 
 @router.get('/model-versions/{version}', tags=['model-versions'])
-def get_model_version(version: Text, project_id: int, model_id: Text) -> JSONResponse:
+def get_model_version(request: Request, version: Text, project_id: int,
+                      model_id: Text) -> JSONResponse:
     """Get model versions list.
     Args:
         project_id {int}: project id
@@ -201,6 +224,8 @@ def get_model_version(version: Text, project_id: int, model_id: Text) -> JSONRes
     Returns:
         starlette.responses.JSONResponse
     """
+
+    log_request(request)
 
     check_if_project_and_model_exist(project_id, model_id)
     model_versions = filter_model_versions(get_model_versions(project_id), model_id)

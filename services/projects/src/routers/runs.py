@@ -6,17 +6,19 @@ from fastapi import APIRouter
 from http import HTTPStatus
 import requests
 from starlette.responses import JSONResponse
+from starlette.requests import Request
 from typing import Text
 
-from projects.src.project_management import ProjectManager
 from common.utils import error_response
+from projects.src.project_management import ProjectManager
+from projects.src.utils import log_request
 
 
 router = APIRouter()  # pylint: disable=invalid-name
 
 
 @router.get('/runs', tags=['runs'])
-def list_runs(project_id: int, experiment_id: Text) -> JSONResponse:
+def list_runs(request: Request, project_id: int, experiment_id: Text) -> JSONResponse:
     """Get runs list.
     Args:
         project_id {int}: project id
@@ -25,8 +27,10 @@ def list_runs(project_id: int, experiment_id: Text) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request)
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     resp = requests.post(
         url=f'{url}/api/2.0/preview/mlflow/runs/search',
         json={'experiment_ids': [experiment_id]}
@@ -47,7 +51,7 @@ def list_runs(project_id: int, experiment_id: Text) -> JSONResponse:
 
 
 @router.get('/runs/{run_id}', tags=['runs'])
-def get_run(run_id: Text, project_id: int) -> JSONResponse:
+def get_run(request: Request, run_id: Text, project_id: int) -> JSONResponse:
     """Get run.
     Args:
         run_id {Text}: run id
@@ -56,8 +60,10 @@ def get_run(run_id: Text, project_id: int) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request)
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     resp = requests.get(
         url=f'{url}/api/2.0/preview/mlflow/runs/get?run_id={run_id}',
     )
@@ -74,7 +80,7 @@ def get_run(run_id: Text, project_id: int) -> JSONResponse:
 
 
 @router.delete('/runs/{run_id}', tags=['runs'])
-def delete_run(run_id: Text, project_id: int) -> JSONResponse:
+def delete_run(request: Request, run_id: Text, project_id: int) -> JSONResponse:
     """Delete run.
     Args:
         run_id {Text}: run id
@@ -83,8 +89,13 @@ def delete_run(run_id: Text, project_id: int) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request, {
+        'project_id': project_id,
+        'run_id': run_id
+    })
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     resp = requests.post(
         url=f'{url}/api/2.0/preview/mlflow/runs/delete',
         json={'run_id': run_id}

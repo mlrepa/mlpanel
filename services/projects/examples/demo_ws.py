@@ -14,22 +14,23 @@ import time
 
 logging.basicConfig(level=logging.DEBUG)
 
-URI = 'http://0.0.0.0:8080'
-ENVS = dotenv_values('../../../config/.env')
+URI = 'http://0.0.0.0:8089'
+ENVS = dotenv_values('../../../config/base/.env')
 GOOGLE_APPLICATION_CREDENTIALS = ENVS.get('GOOGLE_APPLICATION_CREDENTIALS', '/').split('/')[-1]
-GOOGLE_APPLICATION_CREDENTIALS = f'../../../config/{GOOGLE_APPLICATION_CREDENTIALS}'
+GOOGLE_APPLICATION_CREDENTIALS = f'../../../config/credentials/{GOOGLE_APPLICATION_CREDENTIALS}'
 
 
 def generate_project(name):
 
     logging.info(f'Creating project "{name}"')
-    create_resp = requests.post(url=f'{URI}/projects', data={'name': name}).json()
+    create_resp = requests.post(url=f'{URI}/projects', data={'name': name}, verify=False).json()
+    print(create_resp)
     project_id = create_resp.get('id')
     tracking_uri = create_resp.get('mlflowUri')
     
     logging.info(f'Run tracking server of project "{name}"')
-    requests.put(url=f'{URI}/projects/{project_id}/run')
-    project_healthcheck_resp = requests.get(url=f'{URI}/projects/{project_id}/healthcheck')
+    requests.put(url=f'{URI}/projects/{project_id}/run', verify=False)
+    project_healthcheck_resp = requests.get(url=f'{URI}/projects/{project_id}/healthcheck', verify=False)
 
     if project_healthcheck_resp.status_code == 200:
 
@@ -41,7 +42,7 @@ def generate_project(name):
         while True:
             print(str(waiting_time) + ' seconds...')
             try:
-                r = requests.get(tracking_uri)
+                r = requests.get(tracking_uri, verify=False)
 
                 if r.status_code == HTTPStatus.OK:
                     tracking_server_loaded = True
@@ -61,7 +62,9 @@ def generate_project(name):
             logging.info('Run examples...')
             logging.info('run example1.py ...')
             p1 = sp.Popen(
-                f'export MLFLOW_TRACKING_URI={tracking_uri} && python example1.py',
+                f'export MLFLOW_TRACKING_URI={tracking_uri} && '
+                f'export MLFLOW_TRACKING_INSECURE_TLS="true" && '
+                f'python example1.py',
                 shell=True
             )
             p1.wait()
@@ -70,6 +73,7 @@ def generate_project(name):
             logging.info('run example2.py with default parameters...')
             p2 = sp.Popen(
                 f'export MLFLOW_TRACKING_URI={tracking_uri} && '
+                f'export MLFLOW_TRACKING_INSECURE_TLS="true" && '
                 f'export GOOGLE_APPLICATION_CREDENTIALS={GOOGLE_APPLICATION_CREDENTIALS} && '
                 f'python example2.py',
                 shell=True
@@ -80,6 +84,7 @@ def generate_project(name):
             logging.info('run example2.py with cli parameters...')
             p3 = sp.Popen(
                 f'export MLFLOW_TRACKING_URI={tracking_uri} && '
+                f'export MLFLOW_TRACKING_INSECURE_TLS="true" && '
                 f'export GOOGLE_APPLICATION_CREDENTIALS={GOOGLE_APPLICATION_CREDENTIALS} && '
                 f'python example2.py --C 0.1 --solver newton-cg',
                 shell=True
@@ -90,6 +95,7 @@ def generate_project(name):
             logging.info('run example3.py with default parameters...')
             p4 = sp.Popen(
                 f'export MLFLOW_TRACKING_URI={tracking_uri} && '
+                f'export MLFLOW_TRACKING_INSECURE_TLS="true" && '
                 f'export GOOGLE_APPLICATION_CREDENTIALS={GOOGLE_APPLICATION_CREDENTIALS} && '
                 f'python example3.py',
                 shell=True
@@ -100,6 +106,7 @@ def generate_project(name):
             logging.info('run example3.py with cli parameters...')
             p5 = sp.Popen(
                 f'export MLFLOW_TRACKING_URI={tracking_uri} && '
+                f'export MLFLOW_TRACKING_INSECURE_TLS="true" && '
                 f'export GOOGLE_APPLICATION_CREDENTIALS={GOOGLE_APPLICATION_CREDENTIALS} && '
                 f'python example3.py --C 0.1 --kernel linear',
                 shell=True
@@ -109,7 +116,7 @@ def generate_project(name):
             print()
             logging.info('Terminate tracking server')
 
-            requests.put(url=f'{URI}/projects/{project_id}/terminate')
+            requests.put(url=f'{URI}/projects/{project_id}/terminate', verify=False)
 
         else:
 
@@ -128,7 +135,7 @@ if __name__ == '__main__':
     healthcheck_resp = None
 
     try:
-        healthcheck_resp = requests.get(f'{URI}/healthcheck')
+        healthcheck_resp = requests.get(f'{URI}/healthcheck', verify=False)
     except requests.ConnectionError:
         pass
 

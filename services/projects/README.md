@@ -1,20 +1,9 @@
 # projects
 
-## Run tests (in docker)
-
-```bash
-chmod +x tests/test.sh
-./tests/test.sh
-```
-
-or with any `pytest` key, for example, verbose flag:
-
-```bash
-chmod +x tests/test.sh
-./tests/test.sh -v
-```
-
 ## Run examples
+
+**Note!** Variable `AUTH_REQUIRED` must be `false` (in `.env`) 
+before running script `demo_ws.py`.
 
 Folder *examples/* contains simple examples of client for communication with 
 tracking servers.

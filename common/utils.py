@@ -10,6 +10,14 @@ from google.cloud import storage
 from starlette.responses import JSONResponse
 
 
+class ModelDoesNotExistError(Exception):
+    """Model does not exists"""
+
+
+class InvalidEnvVarValueError(Exception):
+    """Invalid env var value"""
+
+
 def get_rfc3339_time() -> Text:
     """Get timestamp in rfc3339 format
 
@@ -57,9 +65,6 @@ def build_error_response(status_code: HTTPStatus, e: Exception) -> JSONResponse:
         message=str(e)
     )
 
-    # Set CORS
-    error_resp.headers['Access-Control-Allow-Origin'] = '*'
-
     return error_resp
 
 
@@ -95,6 +100,10 @@ def kill(proc_pid: int) -> None:
     Arguments:
         proc_pid {int} -- process id
     """
+
+    if not psutil.pid_exists(proc_pid):
+        return
+
     process = psutil.Process(proc_pid)
 
     for proc in process.children(recursive=True):
@@ -118,5 +127,16 @@ def is_remote(path: Text) -> bool:
     return False
 
 
-class ModelDoesNotExistError(Exception):
-    """Model does not exists"""
+def validate_env_var(name: Text, value: Text) -> None:
+
+    if ' ' in value:
+        raise InvalidEnvVarValueError(f'Invalid value "{value}" of env var {name}')
+
+
+def get_utc_timestamp() -> Text:
+    """Get utc timestamp.
+    Returns:
+        Text: utc timestamp
+    """
+
+    return str(datetime.datetime.utcnow().timestamp() * 1000)
