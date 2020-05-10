@@ -1,0 +1,8 @@
+Usage: mlflow models serve [OPTIONS]
+Try 'mlflow models serve --help' for help.
+
+Error: Got unexpected extra argument (2_model)
+Usage: mlflow models serve [OPTIONS]
+Try 'mlflow models serve --help' for help.
+
+Error: Got unexpected extra argument (2_model)

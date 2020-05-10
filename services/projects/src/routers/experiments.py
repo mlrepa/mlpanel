@@ -6,25 +6,28 @@ from fastapi import APIRouter, Form
 from http import HTTPStatus
 import requests
 from starlette.responses import JSONResponse, RedirectResponse
+from starlette.requests import Request
 from typing import Text
 
+from common.utils import error_response, get_utc_timestamp
 from projects.src.project_management import ProjectManager
-from projects.src.utils import get_utc_timestamp
-from common.utils import error_response
+from projects.src.utils import log_request
 
 router = APIRouter()  # pylint: disable=invalid-name
 
 
 @router.get('/experiments', tags=['experiments'])
-def list_experiments(project_id: int) -> JSONResponse:
+def list_experiments(request: Request, project_id: int) -> JSONResponse:
     """Get experiments list.
     Args:
         project_id {int}: project id
     Returns:
         starlette.responses.JSONResponse
     """
+    log_request(request)
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     resp = requests.get(
         url=f'{url}/api/2.0/preview/mlflow/experiments/list'
     )
@@ -67,6 +70,7 @@ def list_experiments(project_id: int) -> JSONResponse:
 
 @router.post('/experiments', tags=['experiments'])
 def create_experiment(
+        request: Request,
         project_id: int,
         user_id: Text = Form(''),
         name: Text = Form(''),
@@ -82,8 +86,15 @@ def create_experiment(
         starlette.responses.JSONResponse
     """
 
+    log_request(request, {
+        'project_id': project_id,
+        'user_id': user_id,
+        'name': name,
+        'description': description
+    })
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     creation_resp = requests.post(
         url=f'{url}/api/2.0/preview/mlflow/experiments/create',
         json={'name': name}
@@ -132,7 +143,7 @@ def create_experiment(
 
 
 @router.get('/experiments/{experiment_id}', tags=['experiments'])
-def get_experiment(experiment_id: Text, project_id: int) -> JSONResponse:
+def get_experiment(request: Request, experiment_id: Text, project_id: int) -> JSONResponse:
     """Get experiment.
     Args:
         experiment_id {Text}: experiment id
@@ -141,8 +152,10 @@ def get_experiment(experiment_id: Text, project_id: int) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request)
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     experiment_resp = requests.get(
         url=f'{url}/api/2.0/preview/mlflow/experiments/get?experiment_id={experiment_id}'
     )
@@ -183,7 +196,7 @@ def get_experiment(experiment_id: Text, project_id: int) -> JSONResponse:
 
 
 @router.delete('/experiments/{experiment_id}', tags=['experiments'])
-def delete_experiment(experiment_id: Text, project_id: int) -> JSONResponse:
+def delete_experiment(request: Request, experiment_id: Text, project_id: int) -> JSONResponse:
     """Delete experiment.
     Args:
         experiment_id {Text}: experiment id
@@ -192,8 +205,13 @@ def delete_experiment(experiment_id: Text, project_id: int) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request, {
+        'project_id': project_id,
+        'experiment_id': experiment_id
+    })
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     experiment_resp = requests.post(
         url=f'{url}/api/2.0/preview/mlflow/experiments/delete',
         json={'experiment_id': experiment_id}

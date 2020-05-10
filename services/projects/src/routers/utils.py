@@ -22,7 +22,7 @@ def get_model_versions(project_id: int) -> List[Dict]:
     """
 
     project_manager = ProjectManager()
-    tracking_uri = project_manager.get_tracking_uri(project_id)
+    tracking_uri = project_manager.get_internal_tracking_uri(project_id)
     model_versions_resp = requests.get(
         url=f'{tracking_uri}/api/2.0/preview/mlflow/model-versions/search'
     )
@@ -76,7 +76,7 @@ def check_if_project_and_model_exist(project_id: int, model_id: Text) -> None:
     """
 
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
 
     if url is None:
         raise ProjectNotFoundError(f'Project with ID {project_id} not found')
@@ -101,7 +101,7 @@ def get_model_version_uri(project_id: int, model_id: Text, version: Text) -> Tex
     """
 
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     model_resp = requests.post(
         url=f'{url}/api/2.0/preview/mlflow/registered-models/get-details',
         json={'registered_model': {'name': model_id}}

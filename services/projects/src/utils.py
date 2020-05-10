@@ -2,10 +2,16 @@
 
 # pylint: disable=wrong-import-order
 
-import datetime
+import json
 import psutil
-import requests
-from typing import Dict, Text
+from starlette.requests import Request
+from typing import Dict
+
+from projects.src.config import Config
+
+
+conf = Config()
+logger = conf.get_logger(__name__)
 
 
 def bytes2mb(byte_number: int) -> int:
@@ -109,20 +115,20 @@ def process_stat(pid: int) -> Dict:
     }
 
 
-def get_utc_timestamp() -> Text:
-    """Get utc timestamp.
-    Returns:
-        Text: utc timestamp
-    """
+def log_request(request: Request, body_params: Dict = None):
 
-    return str(datetime.datetime.utcnow().timestamp())
+    ip = request.headers.get('X-Forwarded-For', request.client.host)
+    host = request.client.host.split(':', 1)[0]
+    query_params = dict(request.query_params)
 
+    log_params = [
+        ('method', request.method),
+        ('path', request.url.path),
+        ('ip', ip),
+        ('host', host),
+        ('params', query_params),
+        ('body', body_params or {})
+    ]
 
-def get_external_ip() -> Text:
-    """Get external ip address.
-    Returns:
-        Text: ip address
-    """
-
-    resp = requests.get('https://api.ipify.org/?format=json')
-    return resp.json().get('ip')
+    line = json.dumps(dict(log_params))
+    logger.debug(line)

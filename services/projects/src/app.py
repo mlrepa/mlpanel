@@ -5,30 +5,21 @@
 from fastapi import FastAPI
 from http import HTTPStatus
 import json
-import os
 import psutil
-from starlette.middleware.cors import CORSMiddleware
+import psycopg2
 from starlette.responses import JSONResponse, Response
 from starlette.requests import Request
-from starlette.templating import Jinja2Templates
-import sqlite3
 
 from common.utils import build_error_response
-from projects.src import config
-from projects.src.project_management import BadProjectNameError, \
-    ProjectAlreadyExistsError, ProjectIsAlreadyRunningError, ProjectNotFoundError, \
-    BadSQLiteTableSchema
+from projects.src.config import Config
+from projects.src.project_management import ProjectsDBSchema, BadProjectNameError, \
+    ProjectAlreadyExistsError, ProjectIsAlreadyRunningError, ProjectNotFoundError
 from projects.src.routers import misc, projects, artifacts, registered_models, experiments, \
     runs, deployments
 from projects.src.routers.utils import RegisteredModelNotFoundError
 
 app = FastAPI()  # pylint: disable=invalid-name
 app.setup()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_methods=['GET', 'POST', 'PUT', 'DELETE']
-)
 
 app.include_router(projects.router)
 app.include_router(experiments.router)
@@ -38,39 +29,42 @@ app.include_router(misc.router)
 app.include_router(artifacts.router)
 app.include_router(deployments.router)
 
-templates = Jinja2Templates(directory='src/templates')  # pylint: disable=invalid-name
+
+conf = Config()
+logger = conf.get_logger(__name__)
 
 
 @app.on_event('startup')
 def init() -> None:
-    """Init on application startup"""
+    """Init on application startup, create DB if not exists, check active projects"""
     try:
-        config.set_logger()
-        projects_db = os.path.join(config.WORKSPACE, config.PROJECTS_DB_NAME)
 
-        if os.path.exists(projects_db):
+        # TODO: add .create_if_not_exist()
+        ProjectsDBSchema()
 
-            conn = sqlite3.connect(projects_db)
-            cursor = conn.cursor()
-            cursor.execute(f'SELECT id, pid FROM {config.PROJECTS_TABLE}')
+        # find gost projects (check PIDs) set '-1' if processed stopped|not exists (default)
+        # TODO: wrap in method
+        connection = psycopg2.connect(
+            database=conf.get('PROJECTS_DB_NAME'),
+            host=conf.get('DB_HOST'),
+            port=conf.get('DB_PORT'),
+            user=conf.get('DB_USER'),
+            password=conf.get('DB_PASSWORD')
+        )
+        cursor = connection.cursor()
+        cursor.execute(f'SELECT id, pid FROM {ProjectsDBSchema.PROJECTS_TABLE}')
 
-            terminated_projects = []
+        for project_id, pid in cursor.fetchall():
+            if not psutil.pid_exists(pid):
+                cursor.execute(
+                    f'UPDATE {ProjectsDBSchema.PROJECTS_TABLE} SET pid = -1 WHERE id = %s',
+                    (project_id,)
+                )
+        connection.commit()
+        connection.close()
 
-            for project_id, pid in cursor.fetchall():
-                if not psutil.pid_exists(pid):
-                    terminated_projects.append(project_id)
-
-            seq = ','.join(['?'] * len(terminated_projects))
-            cursor.execute(
-                f'UPDATE {config.PROJECTS_TABLE} SET pid = -1 WHERE id in ({seq})',
-                terminated_projects
-            )
-            conn.commit()
-            conn.close()
-
-    except BadSQLiteTableSchema as e:  # pylint: disable=invalid-name
-        config.DB_SCHEMA['status'] = 'fail'
-        config.DB_SCHEMA['message'] = str(e)
+    except Exception as e:  # pylint: disable=invalid-name
+        logger.error(e, exc_info=True)
 
 
 @app.middleware('http')
@@ -84,8 +78,10 @@ async def before_and_after_request(request: Request, call_next) -> Response:
     """
     # pylint: disable=too-many-locals,invalid-name,broad-except
 
-    if config.DB_SCHEMA['status'] == 'fail':
-        return JSONResponse(config.DB_SCHEMA, HTTPStatus.INTERNAL_SERVER_ERROR)
+    # check DB schema is valid
+    # TODO (Alex): rewrite
+    # if config.DB_SCHEMA['status'] == 'fail':
+    #     return JSONResponse(config.DB_SCHEMA, HTTPStatus.INTERNAL_SERVER_ERROR)
 
     try:
         response = await call_next(request)
@@ -100,16 +96,12 @@ async def before_and_after_request(request: Request, call_next) -> Response:
         return build_error_response(HTTPStatus.CONFLICT, e)
 
     except Exception as e:
+        logger.error(e, exc_info=True)
         return build_error_response(HTTPStatus.INTERNAL_SERVER_ERROR, e)
 
     ip = request.headers.get('X-Forwarded-For', request.client.host)
     host = request.client.host.split(':', 1)[0]
     query_params = dict(request.query_params)
-
-    # ISSUE: it's problematic to get body in middleware, links:
-    # https://github.com/encode/starlette/issues/495,
-    # https://github.com/tiangolo/fastapi/issues/394
-    # body = dict(await request.body())
 
     log_params = [
         ('method', request.method),
@@ -118,11 +110,10 @@ async def before_and_after_request(request: Request, call_next) -> Response:
         ('ip', ip),
         ('host', host),
         ('params', query_params)
-        # ('body', body)
     ]
 
     line = json.dumps(dict(log_params))
-    config.logger.info(line)
+    logger.debug(line)
     final_response = response
 
     if response.headers.get('content-type') == 'application/json':
@@ -151,7 +142,6 @@ async def before_and_after_request(request: Request, call_next) -> Response:
         else:
             final_response = JSONResponse(json_content)
 
-    final_response.headers['Access-Control-Allow-Origin'] = '*'
     final_response.status_code = response.status_code
 
     return final_response

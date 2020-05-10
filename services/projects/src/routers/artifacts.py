@@ -7,11 +7,13 @@ from http import HTTPStatus
 import os
 import requests
 from starlette.responses import JSONResponse
+from starlette.requests import Request
 from typing import Dict, Text
 
 from common.types import StrEnum
 from common.utils import error_response, is_model
 from projects.src.project_management import ProjectManager
+from projects.src.utils import log_request
 
 
 router = APIRouter()  # pylint: disable=invalid-name
@@ -49,7 +51,7 @@ def get_artifact_type(root_uri: Text, artifact: Dict) -> ArtifactType:
 
 
 @router.get('/artifacts', tags=['artifacts'])
-def list_artifacts(project_id: int, run_id: Text) -> JSONResponse:
+def list_artifacts(request: Request, project_id: int, run_id: Text) -> JSONResponse:
     """Get artifacts list.
     Args:
         project_id {int}: project id
@@ -58,8 +60,13 @@ def list_artifacts(project_id: int, run_id: Text) -> JSONResponse:
         starlette.responses.JSONResponse
     """
 
+    log_request(request, {
+        'project_id': project_id,
+        'run_id': run_id
+    })
+
     project_manager = ProjectManager()
-    url = project_manager.get_tracking_uri(project_id)
+    url = project_manager.get_internal_tracking_uri(project_id)
     runs_resp = requests.get(
         url=f'{url}/api/2.0/preview/mlflow/artifacts/list?run_id={run_id}'
     )
