@@ -1,0 +1,80 @@
+version: '3.5'
+
+services:
+
+  db:
+    environment:
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    image: postgres:12.2
+    container_name: mlpanel-database
+    expose:
+      - $DB_PORT
+    volumes:
+      - $WORKSPACE/ps_data:/var/lib/postgresql/data
+    networks:
+      - mlpanel_default
+
+  mlpanel:
+    image: mlrepa/mlpanel-base-web:v0.2
+    container_name: mlpanel-base-web
+    ports:
+      - 8089:8089
+      - 5000-5100:5000-5100
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - projects
+    networks:
+      - mlpanel_default
+
+  projects:
+    env_file:
+      - .env
+    image: mlrepa/mlpanel-base-projects:v0.2
+    container_name: mlpanel-base-projects
+    expose:
+      - 8080
+      - 5000-5100
+    volumes:
+      - ../../config/credentials:/home/config/credentials
+      - ../../services/projects:/home/projects
+      - ../../common:/home/common
+      - $WORKSPACE:$WORKSPACE
+    depends_on:
+      - db
+    networks:
+      - mlpanel_default
+
+  deploy:
+    env_file:
+      - .env
+    image: mlrepa/mlpanel-base-deploy:v0.2
+    container_name: mlpanel-base-deploy
+    expose:
+      - 9000
+    volumes:
+      - ../../config/credentials:/home/config/credentials
+      - ../../services/deploy:/home/deploy
+      - ../../common:/home/common
+      - $WORKSPACE:$WORKSPACE
+    depends_on:
+      - db
+    networks:
+      - mlpanel_default
+
+  ui:
+    environment:
+      HOST_IP: $HOST_IP
+    image: mlrepa/mlpanel-base-ui:v0.2
+    container_name: mlpanel-base-ui
+    ports:
+    - 3000:3000
+    networks:
+      - mlpanel_default
+
+networks:
+  mlpanel_default:
+    name: mlpanel_default

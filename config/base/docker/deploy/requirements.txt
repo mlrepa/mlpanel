@@ -1,0 +1,4 @@
+google-api-python-client==1.8.2
+oauth2client==3.0.0
+requests==2.23.0
+scikit-learn==0.22.2
