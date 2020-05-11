@@ -1,0 +1,12 @@
+aiofiles==0.5.0
+email-validator==1.1.0
+fastapi==0.54.1
+google-cloud-storage==1.28.0
+jinja2==2.11.2
+mlflow==1.6.0
+psutil==5.7.0
+psycopg2-binary==2.8.5
+pytest==5.4.1
+python-multipart==0.0.5
+pyyaml==5.3.1
+uvicorn==0.11.5

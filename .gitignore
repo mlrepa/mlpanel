@@ -21,7 +21,6 @@ services/projects/examples/models/*
 
 ## configs
 .env
-config/*
 
 ## credentials
 .htpasswd
