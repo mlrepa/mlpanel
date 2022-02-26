@@ -3,7 +3,7 @@ email-validator==1.1.0
 fastapi==0.54.1
 google-cloud-storage==1.28.0
 jinja2==2.11.2
-mlflow==1.6.0
+mlflow==1.23.1
 psutil==5.7.0
 psycopg2-binary==2.8.5
 pytest==5.4.1
